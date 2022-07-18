@@ -6,7 +6,8 @@ generateID <- function(data, name = "courtID"){
   data$in_hierarchy[which(!data$in_hierarchy %in% 0:1)] <- 0
   data$level <- data$court_level
   data$level[which(data$in_hierarchy == 0)] <- 0
-
+  
+  
   data$country_code <- country_codes$code[match(data$States, country_codes$country)]
 
   # Remove coverage information
