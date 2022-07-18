@@ -7,6 +7,7 @@ generateID <- function(data, name = "courtID"){
   data$level <- data$court_level
   data$level[which(data$in_hierarchy == 0)] <- 0
   
+  #test 
   
   data$country_code <- country_codes$code[match(data$States, country_codes$country)]
 
