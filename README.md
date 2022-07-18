@@ -23,8 +23,8 @@ observed with these specifications. In this case, this ID code refers to the
 
 ## Functions
 
-As of now, there is only one function in the package. Later, a function to match
-court names with ID codes is planned.
-
 ### generateID
 Adds a leading column of ID codes to the national courts data set.
+
+### natcourtID
+Matches names of courts with their appropriate ID codes. 
