@@ -26,5 +26,16 @@ observed with these specifications. In this case, this ID code refers to the
 ### generateID
 Adds a leading column of ID codes to the national courts data set.
 
+```R
+# Add ID codes to an R data frame containing the national courts data:
+data <- generateID(data)
+```
+
 ### natcourtID
 Matches names of courts with their appropriate ID codes. 
+
+```R
+natcourtID("Sąd Okręgowy w Gorzowie Wielkopolskim",
+            data = data,
+            country = "Poland")
+```
