@@ -1,5 +1,3 @@
-# data <- read.csv("~/Dokumenter/Tjenester for andre/Anna/National courts/national_courts.csv")
-
 generateID <- function(data, name = "courtID"){
 
   data_in <- data
@@ -75,6 +73,7 @@ generateID <- function(data, name = "courtID"){
   # not mutually exclusive: Administrative and labour, labour and social
 
   data$courtID <- paste0(data$level, paste(data$country_code), data$competence, data$location)
+  data$courtID <- iconv(data$courtID,from="UTF-8",to="ASCII//TRANSLIT")
   duplicates <- names(which(table(data$courtID[which(is.na(data$Name.change..1.))])>1))
   duplicates <- duplicates[which(nchar(duplicates) == 7)]
   for(d in duplicates){
