@@ -1,0 +1,10 @@
+Package: natcourtID
+Type: Package
+Title: Generate ID codes for the Wallerman et al. National Courts dataset
+Version: 0.1.0
+Author: Stein Arne Brekke
+Maintainer: Stein Arne Brekke <stein.brekke@eui.eu>
+Description: Simply generates court ID codes for use with various data bases.
+License: What license is it under?
+Encoding: UTF-8
+LazyData: true
