@@ -1,4 +1,4 @@
-getNatID <- function(court, data=NA, country=NA){
+getNatID <- function(court, data=NA, country=NA, flatten = FALSE){
   if(colnames(data)[1] != "courtID"){
     data <- generateID(data)
   }
@@ -12,22 +12,41 @@ getNatID <- function(court, data=NA, country=NA){
   
   if(!is.na(country)){
     if(country %in% data$States){
-    data <- data[which(data$States == country),]
+      data <- data[which(data$States == country),]
+      court <- gsub(paste0("\\s*-\\s*", country, "$"), "", court)
     }
   }
   
+  # Allow for lists of courts where some contain multiple courts 
+  converted <- NULL
   if(TRUE %in% grepl("\\*[[:upper:]]\\d+\\*", court)){
-    court <- gsub("^\\W*|\\W*$", "", unlist(strsplit(court, "\\*[[:upper:]]\\d+\\*")))
-    court <- court[which(court != "")]
+    for(x in grep("\\*[[:upper:]]\\d+\\*", court)){
+    court_list <- gsub("^\\W*|\\W*$", "", unlist(strsplit(court[x], "\\*[[:upper:]]\\d+\\*")))
+    court_list <- court_list[which(court_list != "")]
+    if(flatten){
+      court[x] <- paste(unlist(lapply(court_list, function(y) onenatcourtID(y, data, country))), collapse="; ")
+    } else {
+      court[[x]] <- list(unlist(lapply(court_list, function(y) onenatcourtID(y, data, country))))
+    }
+    converted <-c(converted, x)
+    }
   }
-  output <- lapply(court, function(y) onenatcourtID(y, data))
-  return(unlist(output))
+  
+  output <- lapply(court, function(y) onenatcourtID(y, data, country))
+  output[converted] <- court[converted]
+  
+  if(flatten){
+    return(unlist(output))
+  } else {
+    output <- lapply(output, unlist)
+    return(output)
+  }
 }
 
 # One Natinal Court ID
 # not intended for human use, part of getNatID.
 
-onenatcourtID <- function(court, data){
+onenatcourtID <- function(court, data, country){
   input <- court 
   x <- grep(tolower(court), tolower(data$Courts), fixed = TRUE)
   if(length(x) == 0 & grepl("\\(", court)){
@@ -41,13 +60,13 @@ onenatcourtID <- function(court, data){
   # Improvise ID code ending in 0 if not found.
   if(length(x) == 0){
     location_words <- c(" d[ieu] ", " of ", ", ", " te ", " u ", " i "," d'")
-    location_words2 <- c(" gericht ", " afdeling ", " division ", " sad ", " Landes ")
+    location_words2 <- c(" gericht ", " afdeling ", " division ", " sad ", " Landes ", " Außenstelle ")
     location <- gsub(",.*$", "", gsub(paste0("^.*?", c(location_words, location_words2), collapse="|"), "", court))
     
     loc <- location
     # Try to translate names of regions
     if(!location %in% data$court_location){
-      location2 <- unique(na.omit(data$court_location[grep(paste0(" ", location, " "), paste0("", data$Courts, " "))]))
+      location2 <- unique(na.omit(data$court_location[grep(paste0(" ", gsub("\\W", ".", location), " "), paste0(" ", data$Courts, " "))]))
       if(length(location2) == 1){
         location <- location2
       }
@@ -100,10 +119,10 @@ onenatcourtID <- function(court, data){
     }
     
     # Search for a specific branch
-    branch_tags <- c(" division", "chamber", "courts")
-    if(grepl(paste0("\\(.*", branch_tags, collapse="|"), input, ignore.case = TRUE)){
-      branch_tags <- branch_tags[unlist(lapply(branch_tags, function(y) grep(y, input, ignore.case = TRUE)))[1]]
-      branch <- gsub("^\\W*", "", gsub(paste0(".*[,\\(-](.*?", branch_tags, ").*$"), "\\1", input, ignore.case = TRUE))
+    branch_tags <- c(" division", "chamber", "courts", " Außenstelle \\w+")
+    if(grepl(paste0("[\\(,].*", branch_tags, collapse="|"), input, ignore.case = TRUE)){
+      branch_tags <- branch_tags[which(unlist(lapply(branch_tags, function(y) grepl(y, input, ignore.case = TRUE))))]
+      branch <- gsub("^\\W*", "", gsub(paste0(".*[,\\(-](.*?", branch_tags, ").*?$"), "\\1", input, ignore.case = TRUE))
       if(branch %in% data$Branch[x]){
         x <- x[which(data$Branch[x] == branch)]
       } else {

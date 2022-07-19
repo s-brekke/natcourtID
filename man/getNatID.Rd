@@ -11,18 +11,23 @@ courts in the national courts data base.
 \usage{
 getNatID(court,
 	 data = NA,
-	 country = NA)
+	 country = NA,
+	 flatten = FALSE)
 }
 
 \arguments{
   \item{court}{
-Name of the court
+Name of the court(s).
 }
   \item{data}{
 National courts data frame.
 }
   \item{country}{
 Country in which the court is located.
+}
+  \item{flatten}{
+Whether or not to always present output as a flat list. Applies when several
+courts are identified in one text string of `court`.
 }
 }
 \details{
