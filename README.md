@@ -34,7 +34,7 @@ Adds a leading column of ID codes to the national courts data set.
 data <- generateID(data)
 ```
 
-### natcourtID
+### getNatID
 Matches names of courts with their appropriate ID codes. 
 
 ```R
@@ -42,7 +42,7 @@ Matches names of courts with their appropriate ID codes.
 # in Poland. Country does not need to be defined as long as the name of the 
 # tribunal is unique. 
 
-natcourtID("Sąd Okręgowy w Gorzowie Wielkopolskim",
+getNatID("Sąd Okręgowy w Gorzowie Wielkopolskim",
             data = data,
             country = "Poland")
 
