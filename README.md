@@ -35,10 +35,7 @@ data <- generateID(data)
 Matches names of courts with their appropriate ID codes. 
 
 ```R
-<<<<<<< HEAD
-=======
 # Fetch court ID for the court "Sąd Okręgowy w Gorzowie Wielkopolskim" located in Poland. 
->>>>>>> 237db5a (add examples)
 natcourtID("Sąd Okręgowy w Gorzowie Wielkopolskim",
             data = data,
             country = "Poland")
