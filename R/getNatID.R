@@ -129,17 +129,16 @@ onenatcourtID <- function(court, data, country){
         }
       }
     }
-    
-    # Try English names (somewhat lazy)
-    if(!is.na(country) & length(x) == 0){
-      if(TRUE %in% grep(tolower(court), tolower(data$English.Translation), fixed = TRUE)){
-        x <- grep(tolower(court), tolower(data$English.Translation), fixed = TRUE)
-      }
-    }
-    
-    
+
     if(length(unique(data$courtID[x])) == 1){
       return(unique(data$courtID[x]))
+    }
+  }
+  
+  # Try English names (somewhat lazy)
+  if(!is.na(country) & length(x) == 0){
+    if(TRUE %in% grep(tolower(court), tolower(data$English.Translation), fixed = TRUE)){
+      x <- grep(tolower(court), tolower(data$English.Translation), fixed = TRUE)
     }
   }
   
