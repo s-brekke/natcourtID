@@ -12,7 +12,7 @@ courts in the national courts data base.
 getNatID(court,
 	 data = NA,
 	 country = NA,
-	 flatten = FALSE)
+	 flatten = TRUE)
 }
 
 \arguments{

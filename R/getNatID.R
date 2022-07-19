@@ -1,9 +1,9 @@
-getNatID <- function(court, data=NA, country=NA, flatten = FALSE){
+getNatID <- function(court, data=NA, country=NA, flatten = TRUE){
   if(colnames(data)[1] != "courtID"){
     data <- generateID(data)
   }
   if(is.na(country)){
-    if(grepl(" - ", court)){
+    if(TRUE %in% grepl(" - ", court)){
       courtcountry <- unlist(strsplit(court, " - "))
       court <- courtcountry[1]
       country <- courtcountry[2]
@@ -19,26 +19,24 @@ getNatID <- function(court, data=NA, country=NA, flatten = FALSE){
   
   # Allow for lists of courts where some contain multiple courts 
   converted <- NULL
-  if(TRUE %in% grepl("\\*[[:upper:]]\\d+\\*", court)){
-    for(x in grep("\\*[[:upper:]]\\d+\\*", court)){
-    court_list <- gsub("^\\W*|\\W*$", "", unlist(strsplit(court[x], "\\*[[:upper:]]\\d+\\*")))
+  split <- "\\*[[:upper:]]\\d+\\*"
+  if(TRUE %in% grepl(split, court)){
+    for(x in grep(split, court)){
+    court_list <- gsub("^\\W*|\\W*$", "", unlist(strsplit(court[x], split)))
     court_list <- court_list[which(court_list != "")]
-    if(flatten){
-      court[x] <- paste(unlist(lapply(court_list, function(y) onenatcourtID(y, data, country))), collapse="; ")
-    } else {
-      court[[x]] <- list(unlist(lapply(court_list, function(y) onenatcourtID(y, data, country))))
-    }
+    court[[x]] <- list(unlist(lapply(court_list, function(y) onenatcourtID(y, data, country))))
     converted <-c(converted, x)
     }
   }
   
   output <- lapply(court, function(y) onenatcourtID(y, data, country))
   output[converted] <- court[converted]
+  output <- lapply(output, unlist)
   
   if(flatten){
+    output <- lapply(output, function(y) paste(y, collapse="; "))
     return(unlist(output))
   } else {
-    output <- lapply(output, unlist)
     return(output)
   }
 }
@@ -81,11 +79,11 @@ onenatcourtID <- function(court, data, country){
       # "Hof van beroep Brussel" is sometimes named "Hof van beroep te Brussel"
       base <- gsub(paste0(location_words, "$", collapse="|"), " ", base)
       
-      if(paste0(base, loc) %in% data$Courts){
+      if(length(which(data$Courts == paste0(base, loc))) == 1){
         return(data$courtID[which(data$Courts == paste0(base, loc))])
       }
       
-      if(TRUE %in% grepl(base, data$Courts)){
+      if(TRUE %in% grepl(base, data$Courts) & !paste0(base, loc) %in% data$Courts){
         if(length(unique(data$States[grep(base, data$Courts)])) == 1){
           ID_base <- gsub("[[:upper:]]{3}", "", data$courtID[grep(base, data$Courts)][1])
           ID_location <- gsub("^.*([[:upper:]]{3}).*$", "\\1", data$courtID[which(data$court_location == location)[1]])
@@ -119,7 +117,7 @@ onenatcourtID <- function(court, data, country){
     }
     
     # Search for a specific branch
-    branch_tags <- c(" division", "chamber", "courts", " Außenstelle \\w+")
+    branch_tags <- c(" division", "chamber", "courts", " Außenstelle \\w+", "sezione.*")
     if(grepl(paste0("[\\(,].*", branch_tags, collapse="|"), input, ignore.case = TRUE)){
       branch_tags <- branch_tags[which(unlist(lapply(branch_tags, function(y) grepl(y, input, ignore.case = TRUE))))]
       branch <- gsub("^\\W*", "", gsub(paste0(".*[,\\(-](.*?", branch_tags, ").*?$"), "\\1", input, ignore.case = TRUE))
@@ -134,13 +132,25 @@ onenatcourtID <- function(court, data, country){
     
     # Try English names (somewhat lazy)
     if(!is.na(country) & length(x) == 0){
-    if(TRUE %in% grep(tolower(court), tolower(data$English.Translation), fixed = TRUE)){
-      x <- grep(tolower(court), tolower(data$English.Translation), fixed = TRUE)
+      if(TRUE %in% grep(tolower(court), tolower(data$English.Translation), fixed = TRUE)){
+        x <- grep(tolower(court), tolower(data$English.Translation), fixed = TRUE)
+      }
     }
-    }
+    
+    
     if(length(unique(data$courtID[x])) == 1){
       return(unique(data$courtID[x]))
     }
   }
+  
+  # multiple courts?
+  if(grepl(" et | and ", court)){
+    x <- unlist(lapply(unlist(strsplit(court, " et | and ")), function(y) which(data$Courts == y)) )
+    if(length(x) > 0){
+      return(unique(data$courtID[x]))
+    }
+  }
+  
   return(NA)
 }
+
