@@ -29,7 +29,7 @@ getNatID <- function(court, data=NA, country=NA){
 
 onenatcourtID <- function(court, data){
   input <- court 
-  x <- grep(court, data$Courts, fixed = TRUE)
+  x <- grep(tolower(court), tolower(data$Courts), fixed = TRUE)
   if(length(x) == 0 & grepl("\\(", court)){
     x <- grep(gsub("\\W*\\(.*$", "", court), data$Courts)
     if(length(x) > 0){
@@ -112,8 +112,16 @@ onenatcourtID <- function(court, data){
         }
       }
     }
+    
+    # Try English names (somewhat lazy)
+    if(!is.na(country) & length(x) == 0){
+    if(TRUE %in% grep(tolower(court), tolower(data$English.Translation), fixed = TRUE)){
+      x <- grep(tolower(court), tolower(data$English.Translation), fixed = TRUE)
+    }
+    }
     if(length(unique(data$courtID[x])) == 1){
       return(unique(data$courtID[x]))
     }
   }
+  return(NA)
 }
