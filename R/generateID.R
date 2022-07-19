@@ -70,8 +70,14 @@ generateID <- function(data, name = "courtID"){
   data$competence[grepl("criminal", data$competence_specific, ignore.case = TRUE)] <- 6
   data$competence[grepl("labou?r", data$competence_specific, ignore.case = TRUE)] <- 7
 
-  # not mutually exclusive: Administrative and labour, labour and social
+  
 
+  # Roman numerals 
+  data$Courts[grep(" I$", data$Courts)] <- paste(data$Courts[grep(" I$", data$Courts)], 1)
+  data$Courts[grep(" II$", data$Courts)] <- paste(data$Courts[grep(" II$", data$Courts)], 2)
+  data$Courts[grep(" III$", data$Courts)] <- paste(data$Courts[grep(" III$", data$Courts)], 3)
+  data$Courts[grep(" IV$", data$Courts)] <- paste(data$Courts[grep(" IV$", data$Courts)], 4)
+  
   data$courtID <- paste0(data$level, paste(data$country_code), data$competence, data$location)
   data$courtID <- iconv(data$courtID,from="UTF-8",to="ASCII//TRANSLIT")
   duplicates <- names(which(table(data$courtID[which(is.na(data$Name.change..1.))])>1))
