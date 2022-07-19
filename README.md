@@ -39,13 +39,13 @@ data <- generateID(data)
 Matches names of courts with their appropriate ID codes. 
 
 ```R
-# Fetch court ID for the court "Sąd Okręgowy w Gorzowie Wielkopolskim" located 
-# in Poland. Country does not need to be defined as long as the name of the 
+# Fetch court ID for the German Bundesverfassungsgericht.
+# Country does not need to be defined as long as the name of the 
 # tribunal is unique. 
 
-getNatID("Sąd Okręgowy w Gorzowie Wielkopolskim",
+getNatID("Bundesverfassungsgericht",
             data = data,
-            country = "Poland")
+            country = "Germany")
 
 # Where "data" is the national courts data set. 
 ```
