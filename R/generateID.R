@@ -64,11 +64,11 @@ generateID <- function(data, name = "courtID"){
   # data$competence[grepl("broadcast", data$competence_specific, ignore.case = TRUE)] <- "B"
   # data$competence[grepl("data", data$competence_specific, ignore.case = TRUE)] <- "D"
 
-  data$competence[grepl("commercial", data$competence_specific, ignore.case = TRUE)] <- 8
-  data$competence[grepl("social", data$competence_specific, ignore.case = TRUE)] <- 9
-  data$competence[grepl("tax", data$competence_specific, ignore.case = TRUE)] <- 5
-  data$competence[grepl("criminal", data$competence_specific, ignore.case = TRUE)] <- 6
-  data$competence[grepl("labou?r", data$competence_specific, ignore.case = TRUE)] <- 7
+  data$competence[which(grepl("tax", data$competence_specific, ignore.case = TRUE) & data$competence == 4)] <- 5
+  data$competence[which(grepl("criminal", data$competence_specific, ignore.case = TRUE) & data$competence == 4)] <- 6
+  data$competence[which(grepl("labou?r", data$competence_specific, ignore.case = TRUE) & data$competence == 4)] <- 7
+  data$competence[which(grepl("social", data$competence_specific, ignore.case = TRUE) & data$competence == 4)] <- 9
+  data$competence[which(grepl("commercial", data$competence_specific, ignore.case = TRUE) & data$competence == 4)] <- 8
 
   
 
