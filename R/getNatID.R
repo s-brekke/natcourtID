@@ -22,10 +22,10 @@ getNatID <- function(court, data=NA, country=NA, flatten = TRUE){
   split <- "\\*[[:upper:]]\\d+\\*"
   if(TRUE %in% grepl(split, court)){
     for(x in grep(split, court)){
-    court_list <- gsub("^\\W*|\\W*$", "", unlist(strsplit(court[x], split)))
-    court_list <- court_list[which(court_list != "")]
-    court[[x]] <- list(unlist(lapply(court_list, function(y) onenatcourtID(y, data, country))))
-    converted <-c(converted, x)
+      court_list <- gsub("^\\W*|\\W*$", "", unlist(strsplit(unlist(court[x]), split)))
+      court_list <- court_list[which(court_list != "")]
+      court[[x]] <- list(unlist(lapply(court_list, function(y) onenatcourtID(y, data, country))))
+      converted <-c(converted, x)
     }
   }
   
@@ -57,14 +57,18 @@ onenatcourtID <- function(court, data, country){
   # Improve search if a base and a location is found in the name.
   # Improvise ID code ending in 0 if not found.
   if(length(x) == 0){
-    location_words <- c(" d[ieu] ", " of ", ", ", " te ", " u ", " i "," d'")
-    location_words2 <- c(" gericht ", " afdeling ", " division ", " sad ", " Landes ", " Außenstelle ")
+    location_words <- c(" d[ieu] ", " of ", ", ", " te ", " u ", " i "," d'", " des ")
+    location_words2 <- c(" gericht ", " afdeling ", " division ", " sad ", " Landes ", " Außenstelle ", " soud [[:lower:]]* ")
     location <- gsub(",.*$", "", gsub(paste0("^.*?", c(location_words, location_words2), collapse="|"), "", court))
+    location <- gsub("^[^[:upper:]]*([[:upper:]])", "\\1", location)
+    location <- gsub("\\W+\\d+[[:lower:]]*$|\\W+$|\\sI+V?$", "", location)
     
     loc <- location
+    if(location != court){
     # Try to translate names of regions
     if(!location %in% data$court_location){
       location2 <- unique(na.omit(data$court_location[grep(paste0(" ", gsub("\\W", ".", location), " "), paste0(" ", data$Courts, " "))]))
+      location2 <- location2[which(!location2 %in% 98:99)]
       if(length(location2) == 1){
         location <- location2
       }
@@ -91,7 +95,7 @@ onenatcourtID <- function(court, data, country){
         }
       }
     }
-    location <- gsub(paste0("^.*?", location_words, collapse="|"), "", court)
+      }
   }
   
   if(length(x) == 0 & grepl(", ", court)){
@@ -101,7 +105,7 @@ onenatcourtID <- function(court, data, country){
     }
   }
   
-  if(length(x) == 0 & grepl(", ", court)){
+  if(length(x) == 0 & grepl("-", court)){
     x <- grep(gsub("-.*$", "", court), data$Courts)
     if(length(x) > 0){
       court <- gsub("-.*$", "", court)
@@ -136,9 +140,12 @@ onenatcourtID <- function(court, data, country){
   }
   
   # Try English names (somewhat lazy)
-  if(!is.na(country) & length(x) == 0){
-    if(TRUE %in% grep(tolower(court), tolower(data$English.Translation), fixed = TRUE)){
+  if(length(x) == 0){
+    if(TRUE %in% grepl(tolower(court), tolower(data$English.Translation), fixed = TRUE)){
       x <- grep(tolower(court), tolower(data$English.Translation), fixed = TRUE)
+    }
+    if(length(unique(data$courtID[x])) == 1){
+      return(unique(data$courtID[x]))
     }
   }
   
@@ -150,6 +157,18 @@ onenatcourtID <- function(court, data, country){
     }
   }
   
+  # Known type of court in unknown location
+  if(location != court){
+    base <- gsub(paste0(loc, ".*$"), "", court)
+    base <- gsub(paste0("\\W*", location_words, "$", collapse="|"), "", base)
+    if(TRUE %in% grepl(paste0("^", base), data$Courts)){
+      x <- grep(paste0("^", base), data$Courts)
+      id_out <- unique(gsub("[[:upper:]]{3}.*$", "", data$courtID[x]))
+      if(length(id_out == 1)){
+        return(id_out)
+      }
+    }
+  }
   return(NA)
 }
 
