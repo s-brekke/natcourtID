@@ -1,14 +1,17 @@
 generateID <- function(data, name = "courtID"){
 
   data_in <- data
-  data$in_hierarchy[which(!data$in_hierarchy %in% 0:1)] <- 0
+  data$in_hierarchy[which(!data$in_hierarchy %in% 0:1)] <- "X"
   data$level <- data$court_level
+  data$level[which(!data$level == 99)] <- "X"
   data$level[which(data$in_hierarchy == 0)] <- 0
   
-  data$country_code <- country_codes$code[match(data$States, country_codes$country)]
+  data$country_code <- country_code$code[match(data$States, country_code$country)]
 
   # Remove coverage information
   data$court_location <- gsub(": covers.*", "", data$court_location)
+  data$court_location <- gsub("\\W+and\\W+|, |\\w*\\W+divisions\\W*|\\W*branches in\\W*|\\W*&\\W*", "/", data$court_location)
+  data$court_location <- gsub("^/", "", data$court_location)
   data$court_location[grep("not known", data$court_location, ignore.case = TRUE)] <- 99
 
   data$location <- toupper(gsub("^(...).*$" ,"\\1", gsub("\\W|\\d", "", data$court_location)))
