@@ -1,4 +1,4 @@
-getNatID <- function(court, data=NA, country=NA, flatten = TRUE){
+getNatID <- function(court, country=NA, flatten = TRUE, data=natcourtID::natcourts){
   if(colnames(data)[1] != "courtID"){
     data <- generateID(data)
   }
@@ -45,6 +45,8 @@ getNatID <- function(court, data=NA, country=NA, flatten = TRUE){
 # not intended for human use, part of getNatID.
 
 onenatcourtID <- function(court, data, country){
+  location <- NA
+  
   input <- court 
   x <- grep(tolower(court), tolower(data$Courts), fixed = TRUE)
   if(length(x) == 0 & grepl("\\(", court)){
@@ -89,7 +91,7 @@ onenatcourtID <- function(court, data, country){
       
       if(TRUE %in% grepl(base, data$Courts) & !paste0(base, loc) %in% data$Courts){
         if(length(unique(data$States[grep(base, data$Courts)])) == 1){
-          ID_base <- gsub("[[:upper:]]{3}", "", data$courtID[grep(base, data$Courts)][1])
+          ID_base <- gsub("[[:upper:]]{3}.*$", "", data$courtID[grep(base, data$Courts)][1])
           ID_location <- gsub("^.*([[:upper:]]{3}).*$", "\\1", data$courtID[which(data$court_location == location)[1]])
           return(paste0(ID_base, ID_location, 0))
         }
@@ -158,7 +160,7 @@ onenatcourtID <- function(court, data, country){
   }
   
   # Known type of court in unknown location
-  if(location != court){
+  if(paste(location) != court & !is.na(location)){
     base <- gsub(paste0(loc, ".*$"), "", court)
     base <- gsub(paste0("\\W*", location_words, "$", collapse="|"), "", base)
     if(TRUE %in% grepl(paste0("^", base), data$Courts)){
