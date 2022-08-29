@@ -56,20 +56,23 @@ onenatcourtID <- function(court, data, country){
               iconv(data$Courts,from="UTF-8",to="ASCII//TRANSLIT"))
   }
   if(length(x) == 0){
-    optional_fillers <- c(" te ")
+    optional_fillers <- c(" te ", "/", " am ", " \\(", " in ", " per la ", " della ")
     
-    
-    x <- grep(tolower(iconv(gsub("\\W", ".", gsub(paste(optional_fillers, collapse="|"), " ", court)), from="UTF-8",to="ASCII//TRANSLIT")), 
-              tolower(iconv(gsub(paste(optional_fillers, collapse="|"), " ", data$Courts),from="UTF-8",to="ASCII//TRANSLIT")))
+    x <- grep(tolower(iconv(gsub("\\W", ".", gsub(paste(optional_fillers, collapse="|"), ".", court)), from="UTF-8",to="ASCII//TRANSLIT")), 
+              tolower(iconv(gsub(paste(optional_fillers, collapse="|"), ".", data$Courts),from="UTF-8",to="ASCII//TRANSLIT")))
+    if(length(x) == 0){
+      x <- grep(tolower(iconv(gsub("\\W", ".", gsub(paste(optional_fillers, collapse="|"), ".", 
+                                                    gsub("\\).*$|,.*$|\\*[[:upper:]]\\d+\\* ", "", court)
+                                                    )), from="UTF-8",to="ASCII//TRANSLIT")), 
+                tolower(iconv(gsub(paste(optional_fillers, collapse="|"), ".", data$Courts),from="UTF-8",to="ASCII//TRANSLIT")))
+    }
   }
   if(length(x) > 1){
     if(length(which(tolower(data$Courts) == tolower(court))) > 0){
     x <- which(tolower(data$Courts) == tolower(court))
     }
   }
-  if(length(x) > 1){
-    x <- x[which(data$Branch[x] == "")]
-  }
+
   if(length(x) == 0 & grepl("\\(", court)){
     x <- grep(gsub("\\W", ".", gsub("\\W*\\(.*$", "", court)), data$Courts)
     if(length(x) == 0){
@@ -108,7 +111,8 @@ onenatcourtID <- function(court, data, country){
     
     if(location %in% data$court_location){
       base <- gsub(paste0(loc, ".*$"), "", court)
-      if(paste0(base, loc) %in% data$Courts){
+      base <- gsub("\\W*$", "", base)
+      if(paste0(base, "\\s?", loc) %in% data$Courts){
         return(data$courtID[which(data$Courts == paste0(base, loc))])
       }
       
@@ -144,6 +148,20 @@ onenatcourtID <- function(court, data, country){
     }
   }
   
+  if(length(x)>1){
+    branches <- x[which(data$Branch[x] != "")]
+    if(length(branches) > 0){
+      branches <- branches[which(unlist(lapply(data$Branch[branches], function(y) grepl(y, input))))]
+    } else { # Multiple observations, but same name, same country, and no branch
+      if(length(unique(paste(data$Courts[x], data$States[x]))) == 1){
+        return(data$courtID[x[1]])
+      }
+    }
+    if(length(branches) == 1){
+      return(unique(data$courtID[branches]))
+    }
+  }
+  
   if(length(x) > 0){
     if(length(unique(data$courtID[x])) == 1){
       return(unique(data$courtID[x]))
@@ -170,6 +188,7 @@ onenatcourtID <- function(court, data, country){
       return(unique(data$courtID[x]))
     }
   }
+  
   
   # Try English names (somewhat lazy)
   if(length(x) == 0){
