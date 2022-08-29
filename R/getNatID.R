@@ -24,6 +24,7 @@ getNatID <- function(court, country=NA, flatten = TRUE, data=natcourtID::natcour
     for(x in grep(split, court)){
       court_list <- gsub("^\\W*|\\W*$", "", unlist(strsplit(unlist(court[x]), split)))
       court_list <- court_list[which(court_list != "")]
+      court_list <- gsub("\\([^\\)]*$", "", court_list)
       court[[x]] <- list(unlist(lapply(court_list, function(y) onenatcourtID(y, data, country))))
       converted <-c(converted, x)
     }
@@ -48,6 +49,15 @@ onenatcourtID <- function(court, data, country){
   location <- NA
   division <- NA
   
+  if(is.na(country) & grepl(" - ", court)){
+    country <- gsub("^.* - ", "", court)
+    if(!country %in% data$States){
+      country <- NA
+    }
+  }
+  if(!is.na(country)){
+    court <- gsub(paste0(" - ", country, "$"), "", court)
+  }
   input <- court 
   
   x <- grep(tolower(court), tolower(data$Courts), fixed = TRUE)
@@ -89,11 +99,16 @@ onenatcourtID <- function(court, data, country){
   if(length(x) == 0){
     location_words <- c(" d[ieu] ", " of ", ", ", " te ", " u ", " i "," d'", " des ")
     location_words2 <- c(" gericht ", " afdeling ", " division ", " sad ", " Landes ", " Außenstelle ", " soud [[:lower:]]* ")
+    not_location <- c("^[EÉ]tat")
+    
     location <- gsub(",.*$", "", gsub(paste0("^.*?", c(location_words, location_words2), collapse="|"), "", court))
+    if(grepl("instanc|tribunal|court|[ée]tat|urteil ", location, ignore.case = TRUE)){
+      location <- gsub(paste0("^.*?", c(location_words, location_words2), collapse="|"), "", location)
+    }
+    
     location <- gsub("^[^[:upper:]]*([[:upper:]])", "\\1", location)
     location <- gsub("\\W+\\d+[[:lower:]]*$|\\W+$|\\sI+V?$", "", location)
     
-    not_location <- c("^[EÉ]tat")
     if(grepl(paste(not_location, collapse="|"), location)){
       location <- NA
     }
@@ -130,6 +145,17 @@ onenatcourtID <- function(court, data, country){
           return(paste0(ID_base, ID_location, 0))
         }
       }
+    } else { # Find courts where everything is equal except location
+      y <- grep(gsub(location, "", court, fixed=TRUE), data$Courts, fixed = TRUE)
+      if(length(y) > 0){
+      y <- y[which(unlist(lapply(y, function(y) gsub(data$court_location[y], "", data$Courts[y], fixed=TRUE) == gsub(location, "", court, fixed=TRUE))))]
+      if(length(y) > 0){
+        code_root <- unique(gsub("[[:upper:]][[:upper:]][[:upper:]].*$", "", data$courtID[y]))
+        if(length(code_root) == 1){ # If there is only one such root, return this
+          return(code_root)
+        }
+      }
+      }
     }
       }
   }
@@ -142,10 +168,14 @@ onenatcourtID <- function(court, data, country){
   }
   
   if(length(x) == 0 & grepl("-", court)){
-    x <- grep(gsub("\\W", ".", gsub("-.*$", "", court)), data$Courts)
+    x <- grep(gsub("\\W", ".", gsub("\\W*-.*$", "", court)), data$Courts)
     if(length(x) > 0){
-      court <- gsub("-.*$", "", court)
+      court <- gsub("\\W*-.*$", "", court)
     }
+  }
+  
+  if(length(x) == 1){
+    return(data$courtID[x])
   }
   
   if(length(x)>1){
