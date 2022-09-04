@@ -1,6 +1,6 @@
-getNatID <- function(court, country=NA, flatten = TRUE, data=natcourtID::natcourts){
-  if(colnames(data)[1] != "courtID"){
-    data <- generateID(data)
+getNatID <- function(court, country=NA, flatten = TRUE, data=NA){
+  if(is.na(data)){
+    data <- natcourts
   }
   if(is.na(country)){
     if(TRUE %in% grepl(" - ", court)){
