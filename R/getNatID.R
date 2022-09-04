@@ -10,6 +10,10 @@ getNatID <- function(court, country=NA, flatten = TRUE, data=natcourtID::natcour
     }
   }
   
+  if(TRUE %in% grepl("Benelux", court)){
+    country <- NA
+  }
+  
   if(!is.na(country)){
     if(country %in% data$States){
       data <- data[which(data$States == country),]
@@ -46,6 +50,10 @@ getNatID <- function(court, country=NA, flatten = TRUE, data=natcourtID::natcour
 # not intended for human use, part of getNatID.
 
 onenatcourtID <- function(court, data, country){
+  
+  if(grepl("^\\d[[:upper:]][[:upper:]]\\d", court)){
+    return(court)
+  }
   location <- NA
   division <- NA
   
@@ -58,6 +66,13 @@ onenatcourtID <- function(court, data, country){
   if(!is.na(country)){
     court <- gsub(paste0(" - ", country, "$"), "", court)
   }
+  
+  if(paste(country) == "Czechia"){
+    country <- "Czech Republic"
+  }
+  
+
+  
   input <- court 
   
   x <- grep(tolower(court), tolower(data$Courts), fixed = TRUE)
@@ -66,7 +81,7 @@ onenatcourtID <- function(court, data, country){
               iconv(data$Courts,from="UTF-8",to="ASCII//TRANSLIT"))
   }
   if(length(x) == 0){
-    optional_fillers <- c(" te ", "/", " am ", " \\(", " in ", " per la ", " della ")
+    optional_fillers <- c(" te ", "/", " am ", " \\(", " in ", " per la ", " della ", " de lo ", "nº \\d+", "-", " sitting ")
     
     x <- grep(tolower(iconv(gsub("\\W", ".", gsub(paste(optional_fillers, collapse="|"), ".", court)), from="UTF-8",to="ASCII//TRANSLIT")), 
               tolower(iconv(gsub(paste(optional_fillers, collapse="|"), ".", data$Courts),from="UTF-8",to="ASCII//TRANSLIT")))
@@ -79,7 +94,7 @@ onenatcourtID <- function(court, data, country){
   }
   if(length(x) > 1){
     if(length(which(tolower(data$Courts) == tolower(court))) > 0){
-    x <- which(tolower(data$Courts) == tolower(court))
+      x <- which(tolower(data$Courts) == tolower(court))
     }
   }
 
@@ -97,8 +112,8 @@ onenatcourtID <- function(court, data, country){
   # Improve search if a base and a location is found in the name.
   # Improvise ID code ending in 0 if not found.
   if(length(x) == 0){
-    location_words <- c(" d[ieu] ", " of ", ", ", " te ", " u ", " i "," d'", " des ")
-    location_words2 <- c(" gericht ", " afdeling ", " division ", " sad ", " Landes ", " Außenstelle ", " soud [[:lower:]]* ")
+    location_words <- c(" d[ieu] ", " of ", ", ", " te ", " u ", " i "," d'", " des ", " at ")
+    location_words2 <- c("gericht ", " afdeling ", " division ", " sad ", " Landes ", " Außenstelle ", " soud [[:lower:]]* ")
     not_location <- c("^[EÉ]tat")
     
     location <- gsub(",.*$", "", gsub(paste0("^.*?", c(location_words, location_words2), collapse="|"), "", court))
@@ -182,13 +197,20 @@ onenatcourtID <- function(court, data, country){
     branches <- x[which(data$Branch[x] != "")]
     if(length(branches) > 0){
       branches <- branches[which(unlist(lapply(data$Branch[branches], function(y) grepl(y, input))))]
-    } else { # Multiple observations, but same name, same country, and no branch
+      if(length(branches)== 0){
+        y <- x[which(data$Branch[x] == "")]
+        if(length(y) == 1){
+          return(data$courtID[y])
+        }
+      }
+    } 
+    if(length(branches) == 1){
+      return(unique(data$courtID[branches]))
+    }
+    if(length(branches)==0){ # Multiple observations, but same name, same country, and no branch
       if(length(unique(paste(data$Courts[x], data$States[x]))) == 1){
         return(data$courtID[x[1]])
       }
-    }
-    if(length(branches) == 1){
-      return(unique(data$courtID[branches]))
     }
   }
   
@@ -259,6 +281,48 @@ onenatcourtID <- function(court, data, country){
     
     if(length(y) == 1){
       return(data$courtID[y])
+    }
+  }
+  # Reverse search:
+  if(!is.na(country)){
+    y <- which(data$States == country)[which(unlist(lapply(data$Courts[which(data$States == country)], function(y) grepl(y, input))))]
+    if(length(y) == 0){
+      y <- which(data$States == country)[which(unlist(lapply(gsub("\\W*\\(.*$", "", data$Courts[which(data$States == country)]), 
+                                                             function(y) grepl(y, input))))]
+    }
+    if(length(y) > 1){
+      branches <- data$Branch[y]
+      
+      z <- y[which(branches != "" & unlist(lapply(branches, function(y) grepl(y, input))))]
+      
+      if(length(z) > 1 | length(z) == 0){
+        z <- ifelse(length(which(branches == "")) == 1,
+               y[which(branches == "")],
+               z)
+      }
+      
+      if(length(z) > 0){
+        y <- z
+      }
+      
+      if(length(y) == 1){
+        return(data$courtID[y])
+      }
+      
+      out <- unique(gsub("[[:upper:]][[:upper:]][[:upper:]].*$", "", data$courtID[y]))
+      if(length(out) == 1){
+        return(out)
+      }
+    }
+    if(length(y) == 1){
+      return(data$courtID[y])
+    }
+  }
+  
+  if(length(x) > 1){
+    out <- unique(gsub("[[:upper:]][[:upper:]][[:upper:]].*$", "", data$courtID[x]))
+    if(length(out) == 1){
+      return(out)
     }
   }
   
