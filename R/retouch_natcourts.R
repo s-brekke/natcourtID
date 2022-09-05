@@ -33,6 +33,7 @@ retouch_natcourts <- function(decisions, text, folder=getwd(), data = natcourts)
   inadmissible_courts <- inadmissible_courts[which(!inadmissible_courts %in% decisions$referring_court_ID[admissible])]
   natcourts$not_a_court <- natcourts$courtID %in% inadmissible_courts
   
+  
   save(natcourts, file=file.path(folder, "natcourts.rda"))
 }
 

@@ -1,5 +1,5 @@
 getNatID <- function(court, country=NA, flatten = TRUE, data=NA){
-  if(is.na(data)){
+  if(class(data) == "logical"){
     data <- natcourts
   }
   if(is.na(country)){
@@ -71,7 +71,7 @@ onenatcourtID <- function(court, data, country){
     country <- "Czech Republic"
   }
   
-
+  
   
   input <- court 
   
@@ -88,8 +88,8 @@ onenatcourtID <- function(court, data, country){
     if(length(x) == 0){
       x <- grep(tolower(iconv(gsub("\\W", ".", gsub(paste(optional_fillers, collapse="|"), ".", 
                                                     gsub("\\).*$|,.*$|\\*[[:upper:]]\\d+\\* ", "", court)
-                                                    )), from="UTF-8",to="ASCII//TRANSLIT")), 
-                tolower(iconv(gsub(paste(optional_fillers, collapse="|"), ".", data$Courts),from="UTF-8",to="ASCII//TRANSLIT")))
+      )), from="UTF-8",to="ASCII//TRANSLIT")), 
+      tolower(iconv(gsub(paste(optional_fillers, collapse="|"), ".", data$Courts),from="UTF-8",to="ASCII//TRANSLIT")))
     }
   }
   if(length(x) > 1){
@@ -97,7 +97,7 @@ onenatcourtID <- function(court, data, country){
       x <- which(tolower(data$Courts) == tolower(court))
     }
   }
-
+  
   if(length(x) == 0 & grepl("\\(", court)){
     x <- grep(gsub("\\W", ".", gsub("\\W*\\(.*$", "", court)), data$Courts)
     if(length(x) == 0){
@@ -128,51 +128,55 @@ onenatcourtID <- function(court, data, country){
       location <- NA
     }
     
-    loc <- location
-    if(paste(location) != court & !is.na(location)){
-    # Try to translate names of regions
-    if(!location %in% data$court_location){
-      location2 <- unique(na.omit(data$court_location[grep(paste0(" ", gsub("\\W", ".", location), " "), paste0(" ", data$Courts, " "))]))
-      location2 <- location2[which(!location2 %in% 98:99)]
-      if(length(location2) == 1){
-        location <- location2
-      }
+    if(location == ""){
+      location <- NA
     }
     
-    if(location %in% data$court_location){
-      base <- gsub(paste0(loc, ".*$"), "", court)
-      base <- gsub("\\W*$", "", base)
-      if(paste0(base, "\\s?", loc) %in% data$Courts){
-        return(data$courtID[which(data$Courts == paste0(base, loc))])
-      }
-      
-      # "Hof van beroep Brussel" is sometimes named "Hof van beroep te Brussel"
-      base <- gsub(paste0(location_words, "$", collapse="|"), " ", base)
-      
-      if(length(which(data$Courts == paste0(base, loc))) == 1){
-        return(data$courtID[which(data$Courts == paste0(base, loc))])
-      }
-      
-      if(TRUE %in% grepl(base, data$Courts) & !paste0(base, loc) %in% data$Courts){
-        if(length(unique(data$States[grep(base, data$Courts)])) == 1){
-          ID_base <- gsub("[[:upper:]]{3}.*$", "", data$courtID[grep(base, data$Courts)][1])
-          ID_location <- gsub("^.*([[:upper:]]{3}).*$", "\\1", data$courtID[which(data$court_location == location)[1]])
-          return(paste0(ID_base, ID_location, 0))
+    loc <- location
+    if(paste(location) != court & !is.na(location)){
+      # Try to translate names of regions
+      if(!location %in% data$court_location){
+        location2 <- unique(na.omit(data$court_location[grep(paste0(" ", gsub("\\W", ".", location), " "), paste0(" ", data$Courts, " "))]))
+        location2 <- location2[which(!location2 %in% 98:99)]
+        if(length(location2) == 1){
+          location <- location2
         }
       }
-    } else { # Find courts where everything is equal except location
-      y <- grep(gsub(location, "", court, fixed=TRUE), data$Courts, fixed = TRUE)
-      if(length(y) > 0){
-      y <- y[which(unlist(lapply(y, function(y) gsub(data$court_location[y], "", data$Courts[y], fixed=TRUE) == gsub(location, "", court, fixed=TRUE))))]
-      if(length(y) > 0){
-        code_root <- unique(gsub("[[:upper:]][[:upper:]][[:upper:]].*$", "", data$courtID[y]))
-        if(length(code_root) == 1){ # If there is only one such root, return this
-          return(code_root)
+      
+      if(location %in% data$court_location){
+        base <- gsub(paste0(loc, ".*$"), "", court)
+        base <- gsub("\\W*$", "", base)
+        if(paste0(base, "\\s?", loc) %in% data$Courts){
+          return(data$courtID[which(data$Courts == paste0(base, loc))])
         }
-      }
+        
+        # "Hof van beroep Brussel" is sometimes named "Hof van beroep te Brussel"
+        base <- gsub(paste0(location_words, "$", collapse="|"), " ", base)
+        
+        if(length(which(data$Courts == paste0(base, loc))) == 1){
+          return(data$courtID[which(data$Courts == paste0(base, loc))])
+        }
+        
+        if(TRUE %in% grepl(base, data$Courts) & !paste0(base, loc) %in% data$Courts){
+          if(length(unique(data$States[grep(base, data$Courts)])) == 1){
+            ID_base <- gsub("[[:upper:]]{3}.*$", "", data$courtID[grep(base, data$Courts)][1])
+            ID_location <- gsub("^.*([[:upper:]]{3}).*$", "\\1", data$courtID[which(data$court_location == location)[1]])
+            return(paste0(ID_base, ID_location, 0))
+          }
+        }
+      } else { # Find courts where everything is equal except location
+        y <- grep(gsub(location, "", court, fixed = TRUE), data$Courts, fixed = TRUE)
+        if(length(y) > 0){
+          y <- y[which(unlist(lapply(y, function(y) gsub(data$court_location[y], "", data$Courts[y], fixed=TRUE) == gsub(location, "", court, fixed=TRUE))))]
+          if(length(y) > 0){
+            code_root <- unique(gsub("[[:upper:]][[:upper:]][[:upper:]].*$", "", data$courtID[y]))
+            if(length(code_root) == 1){ # If there is only one such root, return this
+              return(code_root)
+            }
+          }
+        }
       }
     }
-      }
   }
   
   if(length(x) == 0 & grepl(", ", court)){
@@ -235,7 +239,7 @@ onenatcourtID <- function(court, data, country){
         }
       }
     }
-
+    
     if(length(unique(data$courtID[x])) == 1){
       return(unique(data$courtID[x]))
     }
@@ -297,8 +301,8 @@ onenatcourtID <- function(court, data, country){
       
       if(length(z) > 1 | length(z) == 0){
         z <- ifelse(length(which(branches == "")) == 1,
-               y[which(branches == "")],
-               z)
+                    y[which(branches == "")],
+                    z)
       }
       
       if(length(z) > 0){

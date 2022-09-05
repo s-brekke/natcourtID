@@ -21,6 +21,8 @@ generateID <- function(data, name = "courtID"){
   data$court_location <- gsub("\\W*branches in | or ", "/", data$court_location)
   data$court_location <- gsub("Saint\\W", "S", data$court_location)
   data$court_location <- gsub("L[ea]\\s|The ", "", data$court_location)
+  
+  natcourts$court_location[grep("London .*PO", natcourts$court_location)] <- "London"
 
   data$location[grep("/", data$court_location)] <- toupper(gsub("^(...).*$", "\\1",
                                                                   paste0(gsub("/(.)[^/]*", "\\1",
