@@ -2,6 +2,11 @@ getNatID <- function(court, country=NA, flatten = TRUE, data=NA){
   if(class(data) == "logical"){
     data <- natcourts
   }
+  
+  if(is.null(country)){
+    country <- NA
+  }
+  
   if(is.na(country)){
     if(TRUE %in% grepl(" - ", court)){
       courtcountry <- unlist(strsplit(court, " - "))
@@ -92,6 +97,8 @@ onenatcourtID <- function(court, data, country){
       tolower(iconv(gsub(paste(optional_fillers, collapse="|"), ".", data$Courts),from="UTF-8",to="ASCII//TRANSLIT")))
     }
   }
+  
+  
   if(length(x) > 1){
     if(length(which(tolower(data$Courts) == tolower(court))) > 0){
       x <- which(tolower(data$Courts) == tolower(court))
@@ -117,7 +124,7 @@ onenatcourtID <- function(court, data, country){
     not_location <- c("^[EÉ]tat")
     
     location <- gsub(",.*$", "", gsub(paste0("^.*?", c(location_words, location_words2), collapse="|"), "", court))
-    if(grepl("instanc|tribunal|court|[ée]tat|urteil ", location, ignore.case = TRUE)){
+    if(grepl("instanc|tribunal|court|[ée]tat|urteil |appello", location, ignore.case = TRUE)){
       location <- gsub(paste0("^.*?", c(location_words, location_words2), collapse="|"), "", location)
     }
     
@@ -272,7 +279,7 @@ onenatcourtID <- function(court, data, country){
     if(TRUE %in% grepl(paste0("^", gsub("\\W", "", base)), data$Courts)){
       x <- grep(paste0("^", gsub("\\W", ".", base)), data$Courts)
       id_out <- unique(gsub("[[:upper:]]{3}.*$", "", data$courtID[x]))
-      if(length(id_out == 1)){
+      if(length(id_out) == 1){
         return(id_out)
       }
     }
@@ -328,6 +335,10 @@ onenatcourtID <- function(court, data, country){
     if(length(out) == 1){
       return(out)
     }
+  }
+  
+  if(court == "Prim’Awla tal-Qorti Ċivili"){
+    return(natcourts$courtID[which(natcourts$Courts == "Qorti Ċivili Prim’Awla")])
   }
   
   return(NA)
