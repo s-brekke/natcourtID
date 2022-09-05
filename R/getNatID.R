@@ -3,7 +3,7 @@ getNatID <- function(court, country=NA, flatten = TRUE, data=NA){
     data <- natcourts
   }
   
-  if(is.null(country)){
+  if(length(country) == 0){
     country <- NA
   }
   
