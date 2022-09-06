@@ -295,7 +295,7 @@ onenatcourtID <- function(court, data, country){
     }
   }
   # Reverse search:
-  if(!is.na(country) & paste(country %in% data$States)){
+  if(!is.na(country) & paste(country) %in% data$States){
     y <- which(data$States == country)[which(unlist(lapply(data$Courts[which(data$States == country)], function(y) grepl(y, input))))]
     if(length(y) == 0){
       y <- which(data$States == country)[which(unlist(lapply(gsub("\\W*\\(.*$", "", data$Courts[which(data$States == country)]), 
