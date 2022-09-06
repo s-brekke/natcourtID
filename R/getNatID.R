@@ -1,6 +1,6 @@
 getNatID <- function(court, country=NA, flatten = TRUE, data=NA){
   if(class(data) == "logical"){
-    data <- natcourts
+    data <- natcourtID::natcourts
   }
   
   if(length(country) == 0){
