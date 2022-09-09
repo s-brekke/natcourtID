@@ -102,8 +102,8 @@ onenatcourtID <- function(court, data, country){
   
   
   if(length(x) > 1){
-    if(length(which(tolower(data$Courts) == tolower(court))) > 0){
-      x <- which(tolower(data$Courts) == tolower(court))
+    if(length(which(tolower(gsub("\\W*\\(.*| - .*$", "", data$Courts)) == tolower(court))) > 0){
+      x <- which(tolower(gsub("\\W*\\(.*| - .*$", "", data$Courts)) == tolower(court))
     }
   }
   
