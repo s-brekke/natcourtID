@@ -80,6 +80,8 @@ onenatcourtID <- function(court, data, country){
   
   input <- court 
   
+  court <- gsub("^\\s*|\\s*$", "", court)
+  
   x <- grep(tolower(court), tolower(data$Courts), fixed = TRUE)
   if(length(x) == 0){
     x <- grep(iconv(gsub("\\W", ".", court), from="UTF-8",to="ASCII//TRANSLIT"), 
