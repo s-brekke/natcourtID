@@ -7,7 +7,7 @@ retouch_natcourts <- function(decisions, text, folder=getwd(), data = natcourts)
   natcourts$court_location <- gsub("^\\s*|\\s*$", "", natcourts$court_location)
   
   # Identify non-courts ####
-  not_court_keyword <- "concept.{1,15}court|Notion.{1,15}juridiction|definition.{1,15}court|Definition.{1,20}jurisdiction"
+  not_court_keyword <- "concept.{1,15}court|Notion.{1,15}juridiction|definition.{1,15}court|Definition.{1,20}jurisdiction|National court or tribunal"
   
   decisions <- decisions[which(decisions$preliminary_ruling == 1),]
   inadmissible <- which(decisions$reference_for_preliminary_ruling=="inadmissible")
