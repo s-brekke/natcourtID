@@ -49,3 +49,22 @@ getNatID("Bundesverfassungsgericht",
 
 # Where "data" is the national courts data set. 
 ```
+
+## Interpreting the ID code
+
+The substantial parts of the ID code can be interpreted as follows: 
+
+### Judicial hierarchy:
+
+- 0: Not in hierarchy
+- 1: Lower level court
+- 2: Mid-level court
+- 3: Higher court
+
+### Competence
+
+- 1: General
+- 2: Administrative
+- 3: Constitutional
+- 4: Specialized 
+
