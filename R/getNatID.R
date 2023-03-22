@@ -137,7 +137,7 @@ onenatcourtID <- function(court, data, country){
       location <- NA
     }
     
-    if(location == ""){
+    if(paste(location) == ""){
       location <- NA
     }
     
