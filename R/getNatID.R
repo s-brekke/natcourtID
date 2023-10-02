@@ -153,12 +153,12 @@ onenatcourtID <- function(court, data, country){
       }
       
       if(location %in% data$court_location){
+        
         base <- gsub(paste0(loc, ".*$"), "", court)
-        base <- base |>
-          str_remove("\\W*$") |>
-          str_replace_all("^\\s*[\\[\\]]?|[\\[\\]]\\s*$", "") |>
-          str_replace_all("\\[|\\]", ".")
-          gsub("\\W*$", "", base)
+        base <- gsub("\\W*$", "", base)
+        base <- gsub("^\\s*[\\[\\]]?|[\\[\\]]\\s*$", "", base)
+        base <- gsub("\\[|\\]", ".", base)
+        base <- gsub("\\W*$", "", base)
           
         if(paste0(base, "\\s?", loc) %in% data$Courts){
           return(data$courtID[which(data$Courts == paste0(base, loc))])
