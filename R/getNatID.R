@@ -345,7 +345,7 @@ onenatcourtID <- function(court, data, country){
   }
   
   if(court == "Prim’Awla tal-Qorti Ċivili"){
-    return(natcourts$courtID[which(natcourts$Courts == "Qorti Ċivili Prim’Awla")])
+    return(data$courtID[which(data$Courts == "Qorti Ċivili Prim’Awla")])
   }
   
   return(NA)
