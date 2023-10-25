@@ -121,7 +121,7 @@ onenatcourtID <- function(court, data, country){
   # Improve search if a base and a location is found in the name.
   # Improvise ID code ending in 0 if not found.
   if(length(x) == 0){
-    location_words <- c(" d[ieu] ", " of ", ", ", " te ", " u ", " i "," d'", " des ", " at ")
+    location_words <- c(" d[ieu] ", " of ", ", ", " te ", " u ", " i "," d'", " de ", " des ", " at ")
     location_words2 <- c("gericht ", " afdeling ", " division ", " sad ", " Landes ", " Außenstelle ", " soud [[:lower:]]* ")
     not_location <- c("^[EÉ]tat")
     
@@ -167,24 +167,42 @@ onenatcourtID <- function(court, data, country){
         # "Hof van beroep Brussel" is sometimes named "Hof van beroep te Brussel"
         base <- gsub(paste0(location_words, "$", collapse="|"), " ", base)
         
-        if(length(which(data$Courts == paste0(base, loc))) == 1){
+        if(length(which(tolower(data$Courts) == tolower(paste0(base, loc)))) == 1){
           return(data$courtID[which(data$Courts == paste0(base, loc))])
         }
         
-        if(TRUE %in% grepl(base, data$Courts) & !paste0(base, loc) %in% data$Courts){
-          if(length(unique(data$States[grep(base, data$Courts)])) == 1){
-            ID_base <- gsub("[[:upper:]]{3}.*$", "", data$courtID[grep(base, data$Courts)][1])
+        if(TRUE %in% grepl(base, data$Courts, ignore.case=TRUE) & 
+           !paste0(base, loc) %in% data$Courts){
+          if(length(unique(data$States[grep(base, data$Courts, ignore.case = TRUE)])) == 1){
+            ID_base <- gsub("[[:upper:]]{3}.*$", "", data$courtID[grep(base, data$Courts, ignore.case = TRUE)][1])
             ID_location <- gsub("^.*([[:upper:]]{3}).*$", "\\1", data$courtID[which(data$court_location == location)[1]])
             return(paste0(ID_base, ID_location, 0))
           }
         }
       } else { # Find courts where everything is equal except location
-        y <- grep(gsub(location, "", court, fixed = TRUE), data$Courts, fixed = TRUE)
+        loc_search <- tolower(gsub(location, "", court, fixed = TRUE))
+        loc_search <- gsub("l[ea']\\s*$","", loc_search)
+        y <- grep(loc_search, tolower(data$Courts), fixed = TRUE)
         if(length(y) > 0){
-          y <- y[which(unlist(lapply(y, function(y) gsub(data$court_location[y], "", data$Courts[y], fixed=TRUE) == gsub(location, "", court, fixed=TRUE))))]
+          y <- y[which(unlist(lapply(y, function(y) tolower(gsub(data$court_location[y], "", 
+                                                                 data$Courts[y], fixed=TRUE)) == loc_search)))]
           if(length(y) > 0){
             code_root <- unique(gsub("[[:upper:]][[:upper:]][[:upper:]].*$", "", data$courtID[y]))
-            if(length(code_root) == 1){ # If there is only one such root, return this
+            if(length(code_root) == 1){ # If there is only one such root, it's good
+              
+              # Check if location is found in additional list of locations
+              if(tolower(location) %in% tolower(location_codes$location) |
+                 TRUE %in% grepl(paste("", tolower(location), ""), paste("", tolower(location_codes$location), ""))){
+                loc <- location_codes$code[which(tolower(location_codes$location) ==
+                                            tolower(location))]
+                if(length(loc) == 0){
+                  loc <- location_codes$code[grep(paste("", tolower(location), ""), 
+                                                  paste("", tolower(location_codes$location), ""))]
+                }
+                return(paste0(code_root, loc))
+              }
+              # Check if location can be identified in custom list
+              
               return(code_root)
             }
           }

@@ -42,6 +42,14 @@ generateID <- function(data, name = "courtID"){
     region <- names(t[which(t == min(t))])[1]
     region_fix <- gsub("\\W|\\d", "", region)
     # message(region)
+    
+    if(tolower(region) %in% tolower(location_codes$location) | 
+       tolower(region_fix) %in% tolower(gsub("\\W|\\d", "", location_codes$location)) |
+       TRUE %in% grepl(region, location_codes$location)){
+      location_new <- location_codes$code[which(tolower(region) == tolower(location_codes$location) | 
+        tolower(region_fix) == tolower(gsub("\\W|\\d", "", location_codes$location)) | 
+          grepl(region, location_codes$location))]
+    } else {
 
     location_new <- toupper(gsub("^(..).(.).*$", "\\1\\2", region_fix))
     if(gsub("^...", location_new, l) %in% locations$loc_country){
@@ -55,6 +63,7 @@ generateID <- function(data, name = "courtID"){
       if(gsub("^...", location_new, l) %in% locations$loc_country){
         stop("Unique region ID could not be constructed. Add more algorithms.")
       }
+    }
     }
     locations[which(locations$loc_country == l & locations$court_location == region),"location"] <- location_new
     data[which(data$loc_country == l & data$court_location == region),"location"] <- location_new
